@@ -1,0 +1,95 @@
+import { StreamableFile } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateServiceUserDto } from './dto/create-service-user.dto';
+import { UpdateServiceUserDto } from './dto/update-service-user.dto';
+import { ListServiceUsersDto } from './dto/list-service-users.dto';
+export declare class UsersController {
+    private readonly usersService;
+    constructor(usersService: UsersService);
+    findAll(dto: ListServiceUsersDto): Promise<{
+        data: {
+            id: string;
+            description: string | null;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+            phone: string;
+            email: string | null;
+            firstName: string;
+            secondName: string | null;
+            firstSurname: string;
+            secondSurname: string | null;
+            birthDate: Date | null;
+            birthDateApproximate: boolean;
+            healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+            city: string | null;
+            neighborhood: string | null;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    getTemplate(): StreamableFile;
+    findOne(id: string): Promise<{
+        id: string;
+        description: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        address: string | null;
+        phone: string;
+        email: string | null;
+        firstName: string;
+        secondName: string | null;
+        firstSurname: string;
+        secondSurname: string | null;
+        birthDate: Date | null;
+        birthDateApproximate: boolean;
+        healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+        city: string | null;
+        neighborhood: string | null;
+    }>;
+    create(dto: CreateServiceUserDto): Promise<{
+        id: string;
+        description: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        address: string | null;
+        phone: string;
+        email: string | null;
+        firstName: string;
+        secondName: string | null;
+        firstSurname: string;
+        secondSurname: string | null;
+        birthDate: Date | null;
+        birthDateApproximate: boolean;
+        healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+        city: string | null;
+        neighborhood: string | null;
+    }>;
+    update(id: string, dto: UpdateServiceUserDto): Promise<{
+        id: string;
+        description: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        address: string | null;
+        phone: string;
+        email: string | null;
+        firstName: string;
+        secondName: string | null;
+        firstSurname: string;
+        secondSurname: string | null;
+        birthDate: Date | null;
+        birthDateApproximate: boolean;
+        healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+        city: string | null;
+        neighborhood: string | null;
+    }>;
+    bulkImport(file: Express.Multer.File): Promise<{
+        inserted: number;
+    }>;
+}

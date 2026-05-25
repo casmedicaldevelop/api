@@ -1,0 +1,45 @@
+import { StreamableFile } from '@nestjs/common';
+import { TvMedService } from './tv-med.service';
+import { CreateTvMedDto } from './dto/create-tv-med.dto';
+import { UpdateTvMedDto } from './dto/update-tv-med.dto';
+import { ListTvMedDto } from './dto/list-tv-med.dto';
+export declare class TvMedController {
+    private readonly tvMedService;
+    constructor(tvMedService: TvMedService);
+    findAll(dto: ListTvMedDto): Promise<{
+        data: {
+            id: number;
+            name: string;
+            createdAt: Date;
+            code: string;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    getTemplate(): StreamableFile;
+    findOne(id: number): Promise<{
+        id: number;
+        name: string;
+        createdAt: Date;
+        code: string;
+    }>;
+    create(dto: CreateTvMedDto): Promise<{
+        id: number;
+        name: string;
+        createdAt: Date;
+        code: string;
+    }>;
+    update(id: number, dto: UpdateTvMedDto): Promise<{
+        id: number;
+        name: string;
+        createdAt: Date;
+        code: string;
+    }>;
+    remove(id: number): Promise<void>;
+    bulkUpload(file: Express.Multer.File): Promise<{
+        inserted: number;
+        total: number;
+    }>;
+}

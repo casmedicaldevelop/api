@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS "programaciones" CASCADE;
+DROP TABLE IF EXISTS "suministros" CASCADE;
+DROP TABLE IF EXISTS "reportes_entrega" CASCADE;
+DROP TABLE IF EXISTS "no_direccionamientos" CASCADE;
+DROP TABLE IF EXISTS "entregas" CASCADE;
+DROP TABLE IF EXISTS "direccionamientos" CASCADE;

@@ -1,15 +1,240 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model Employee {
+  id                   String   @id @default(cuid())
+  name                 String
+  phone                String?
+  email                String   @unique
+  identificationNumber String   @unique @map("identification_number")
+  username             String   @unique
+  password             String
+  role                 Role     @default(USER)
+  isActive             Boolean  @default(true) @map("is_active")
+  mustChangePassword   Boolean  @default(false) @map("must_change_password")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  modules              EmployeeModule[]
+  passwordResetOtps    PasswordResetOtp[]
+
+  @@map("employees")
+}
+
+model Module {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  label        String
+  icon         String
+  description  String?
+  displayOrder  Int      @default(0) @map("display_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  isAdminOnly   Boolean  @default(false) @map("is_admin_only")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  employees    EmployeeModule[]
+
+  @@map("modules")
+}
+
+model EmployeeModule {
+  employeeId String   @map("employee_id")
+  moduleId   String   @map("module_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, moduleId])
+  @@map("employee_modules")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  code        String
+  product     String
+  cum         String?
+  cumSkipped  Boolean  @default(false) @map("cum_skipped")
+  box         Int      @default(0)
+  unit        Int      @default(0)
+  lot         String
+  warehouse   Int
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([code, lot, warehouse])
+  @@index([isActive])
+  @@index([code])
+  @@index([cum, cumSkipped])
+  @@map("products")
+}
+
+model Provider {
+  id          Int      @id
+  name        String   @unique
+  tableKey    String   @unique @map("table_key")
+  address     String?
+  phone       String?
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("providers")
+}
+
+model Provider1 {
+  code      String  @id
+  product   String
+  iva       Boolean @default(false)
+  cum       String?
+  priceBox  Float   @default(0) @map("price_box")
+  priceUnit Float   @default(0) @map("price_unit")
+  stopBox   Float   @default(0) @map("stop_box")
+
+  @@map("provider_1")
+}
+
+model Provider2 {
+  code      String  @id
+  product   String
+  iva       Boolean @default(false)
+  cum       String?
+  priceBox  Float   @default(0) @map("price_box")
+  priceUnit Float   @default(0) @map("price_unit")
+  stopBox   Float   @default(0) @map("stop_box")
+
+  @@map("provider_2")
+}
+
+model Provider3 {
+  code      String  @id
+  product   String
+  iva       Boolean @default(false)
+  cum       String?
+  priceBox  Float   @default(0) @map("price_box")
+  priceUnit Float   @default(0) @map("price_unit")
+  stopBox   Float   @default(0) @map("stop_box")
+
+  @@map("provider_3")
+}
+
+model Provider4 {
+  code      String  @id
+  product   String
+  iva       Boolean @default(false)
+  cum       String?
+  priceBox  Float   @default(0) @map("price_box")
+  priceUnit Float   @default(0) @map("price_unit")
+  stopBox   Float   @default(0) @map("stop_box")
+
+  @@map("provider_4")
+}
+
+model Provider5 {
+  code      String  @id
+  product   String
+  iva       Boolean @default(false)
+  cum       String?
+  priceBox  Float   @default(0) @map("price_box")
+  priceUnit Float   @default(0) @map("price_unit")
+  stopBox   Float   @default(0) @map("stop_box")
+
+  @@map("provider_5")
+}
+
+enum HealthcareRegime {
+  CONTRIBUTORY
+  SUBSIDIZED
+}
+
+model User {
+  id            String    @id
+  firstName     String    @map("first_name")
+  secondName    String?   @map("second_name")
+  firstSurname  String    @map("first_surname")
+  secondSurname String?   @map("second_surname")
+  phone         String
+  email         String?
+  birthDate     DateTime? @map("birth_date")
+  birthDateApproximate Boolean @default(false) @map("birth_date_approximate")
+  healthcareRegime HealthcareRegime? @map("healthcare_regime")
+  city          String?
+  neighborhood  String?
+  address       String?
+  description   String?
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([firstSurname])
+  @@index([firstName])
+  @@map("users")
+}
+
+model Company {
+  id           String   @id @default("singleton")
+  name         String
+  nit          String
+  email        String?
+  phone        String?
+  city         String?
+  address      String?
+  codeProvider String?  @map("code_provider")
+  tokenCompany String?  @map("token_company")
+  tokenAuth    String?  @map("token_auth")
+  aiApiKey     String?  @map("ai_api_key")
+  aiModel      String?  @default("gemini-3-flash-preview") @map("ai_model")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("company")
+}
+
+model StopMax {
+  id        Int      @id @default(autoincrement())
+  product   String
+  cum       String?
+  price     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([product])
+  @@map("stop_max")
+}
+
+model TvMed {
+  id        Int      @id @default(autoincrement())
+  code      String
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tv_med")
+}
+
+model PasswordResetOtp {
+  id         String   @id @default(cuid())
+  employeeId String   @map("employee_id")
+  otpHash    String   @map("otp_hash")
+  expiresAt  DateTime @map("expires_at")
+  attempts   Int      @default(0)
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("password_reset_otps")
 }

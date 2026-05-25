@@ -1,0 +1,71 @@
+import { ConfigService } from '@nestjs/config';
+import { CompanyService } from '../company/company.service';
+import { UsersService } from '../users/users.service';
+import type { WorkspaceResponse } from './types/workspace.response';
+export declare class MipresService {
+    private readonly configService;
+    private readonly companyService;
+    private readonly usersService;
+    private readonly baseUrl;
+    private readonly facBaseUrl;
+    constructor(configService: ConfigService, companyService: CompanyService, usersService: UsersService);
+    private enc;
+    private getCreds;
+    private fetchSispro;
+    private get;
+    private put;
+    private putFac;
+    private getFac;
+    getRoutingsByPrescription(prescriptionNumber: string): Promise<unknown>;
+    getPrescriptionWorkspace(prescriptionNumber: string): Promise<WorkspaceResponse>;
+    createSchedule(body: {
+        miPresDireccionId: string;
+        fecMaxEnt: string;
+        tipoIdSedeProv: string;
+        noIdSedeProv: string;
+        codSedeProv: string;
+        codSerTecAEntregar: string;
+        cantTotAEntregar: string;
+    }): Promise<unknown>;
+    getSchedulesByPrescription(prescriptionNumber: string): Promise<unknown>;
+    cancelSchedule(scheduleId: string): Promise<unknown>;
+    getDeliveriesByPrescription(prescriptionNumber: string): Promise<unknown>;
+    cancelDelivery(deliveryId: string): Promise<unknown>;
+    createDelivery(body: {
+        miPresDireccionId: string;
+        codSerTecEntregado: string;
+        cantTotEntregada: string;
+        entTotal: number;
+        causaNoEntrega: number;
+        fecEntrega: string;
+        noLote: string;
+        tipoIdRecibe: string;
+        noIdRecibe: string;
+    }): Promise<unknown>;
+    createDeliveryReport(body: {
+        miPresEntregaId: string;
+        valorEntregado: string;
+    }): Promise<unknown>;
+    getDeliveryReportsByPrescription(prescriptionNumber: string): Promise<unknown>;
+    cancelDeliveryReport(reportId: string): Promise<unknown>;
+    createFacturacion(body: {
+        NoPrescripcion: string;
+        TipoTec: string;
+        ConTec: number;
+        TipoIDPaciente: string;
+        NoIDPaciente: string;
+        NoEntrega: number;
+        NoSubEntrega: number;
+        NoFactura: string;
+        NoIDEPS: string;
+        CodEPS: string;
+        CodSerTecAEntregado: string;
+        CantUnMinDis: string;
+        ValorUnitFacturado: string;
+        ValorTotFacturado: string;
+        CuotaModer: string;
+        Copago: string;
+    }): Promise<unknown>;
+    getFacturacionesByPrescription(prescriptionNumber: string): Promise<unknown>;
+    cancelFacturacion(idFacturacion: string): Promise<unknown>;
+}
