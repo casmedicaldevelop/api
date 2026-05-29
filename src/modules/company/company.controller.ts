@@ -1,5 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Put, Req, UseGuards } from '@nestjs/common'
-import type { Request } from 'express'
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Put, UseGuards } from '@nestjs/common'
 import { CompanyService } from './company.service'
 import { UpsertCompanyDto } from './dto/upsert-company.dto'
 import { UpdateMipresDto } from './dto/update-mipres.dto'
@@ -12,8 +11,8 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Get()
-  getCompany(@Req() req: Request & { user?: { role?: string } }) {
-    return this.companyService.getCompany(req.user?.role)
+  getCompany() {
+    return this.companyService.getCompany()
   }
 
   @Put()
@@ -38,7 +37,7 @@ export class CompanyController {
   @HttpCode(HttpStatus.OK)
   async refreshMipresToken() {
     await this.companyService.generateMipresToken()
-    return this.companyService.getCompany('ADMIN')
+    return this.companyService.getCompany()
   }
 
   @Patch('ai')

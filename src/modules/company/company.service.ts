@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
-import type { Company } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import { UpsertCompanyDto } from './dto/upsert-company.dto'
 import { UpdateMipresDto } from './dto/update-mipres.dto'
@@ -8,28 +7,15 @@ import { UpdateAiDto } from './dto/update-ai.dto'
 const SINGLETON_ID = 'singleton'
 const MIPRES_BASE_URL = 'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/api/GenerarToken'
 
-type PublicCompany = Pick<Company, 'id' | 'name' | 'nit' | 'codeProvider'>
-
 @Injectable()
 export class CompanyService {
   private readonly logger = new Logger(CompanyService.name)
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getCompany(): Promise<Company>
-  async getCompany(role: 'ADMIN'): Promise<Company>
-  async getCompany(role: string | undefined): Promise<Company | PublicCompany>
-  async getCompany(role?: string): Promise<Company | PublicCompany> {
+  async getCompany() {
     const company = await this.prisma.company.findUnique({ where: { id: SINGLETON_ID } })
     if (!company) throw new NotFoundException('La empresa no ha sido configurada')
-    if (role && role !== 'ADMIN') {
-      return {
-        id: company.id,
-        name: company.name,
-        nit: company.nit,
-        codeProvider: company.codeProvider,
-      }
-    }
     return company
   }
 
