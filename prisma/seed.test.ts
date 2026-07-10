@@ -29,9 +29,9 @@ describe('seed', () => {
     expect(count).toBe(1);
   });
 
-  it('admin user has role ADMIN and mustChangePassword true', async () => {
+  it('admin user has role ADMINISTRADOR and mustChangePassword true', async () => {
     const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
-    expect(admin?.role).toBe('ADMIN');
+    expect(admin?.role).toBe('ADMINISTRADOR');
     expect(admin?.mustChangePassword).toBe(true);
   });
 

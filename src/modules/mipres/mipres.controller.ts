@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common'
 import { MipresService } from './mipres.service'
+import { CreateScheduleDto } from './dto/create-schedule.dto'
 import { CreateDeliveryDto } from './dto/create-delivery.dto'
 import { CreateDeliveryReportDto } from './dto/create-delivery-report.dto'
 import { CreateFacturacionDto } from './dto/create-facturacion.dto'
@@ -24,15 +25,7 @@ export class MipresController {
 
   @Post('schedule')
   @HttpCode(HttpStatus.OK)
-  createSchedule(@Body() body: {
-    miPresDireccionId: string
-    fecMaxEnt: string
-    tipoIdSedeProv: string
-    noIdSedeProv: string
-    codSedeProv: string
-    codSerTecAEntregar: string
-    cantTotAEntregar: string
-  }) {
+  createSchedule(@Body() body: CreateScheduleDto) {
     return this.mipresService.createSchedule(body)
   }
 

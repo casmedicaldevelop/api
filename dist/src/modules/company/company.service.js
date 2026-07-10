@@ -58,18 +58,6 @@ let CompanyService = CompanyService_1 = class CompanyService {
             data: { tokenCompany: dto.tokenCompany ?? null },
         });
     }
-    async updateAi(dto) {
-        const company = await this.prisma.company.findUnique({ where: { id: SINGLETON_ID } });
-        if (!company)
-            throw new common_1.NotFoundException('La empresa no ha sido configurada');
-        return this.prisma.company.update({
-            where: { id: SINGLETON_ID },
-            data: {
-                aiApiKey: dto.aiApiKey ?? null,
-                aiModel: dto.aiModel,
-            },
-        });
-    }
     async generateMipresToken() {
         const company = await this.prisma.company.findUnique({ where: { id: SINGLETON_ID } });
         if (!company?.nit || !company?.tokenCompany) {

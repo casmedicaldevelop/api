@@ -1,6 +1,8 @@
-import { HealthcareRegime } from '@prisma/client';
+import { DocumentType, Gender, HealthcareRegime } from '@prisma/client';
 export declare class CreateServiceUserDto {
     id: string;
+    documentType?: DocumentType;
+    gender?: Gender;
     firstName: string;
     secondName?: string;
     firstSurname: string;
@@ -10,6 +12,7 @@ export declare class CreateServiceUserDto {
     birthDate?: string;
     birthDateApproximate?: boolean;
     healthcareRegime?: HealthcareRegime;
+    department?: string;
     city?: string;
     neighborhood?: string;
     address?: string;

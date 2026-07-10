@@ -8,8 +8,8 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
-  USER
+  ADMINISTRADOR
+  AUXILIAR
 }
 
 model Employee {
@@ -20,7 +20,7 @@ model Employee {
   identificationNumber String   @unique @map("identification_number")
   username             String   @unique
   password             String
-  role                 Role     @default(USER)
+  role                 Role     @default(AUXILIAR)
   isActive             Boolean  @default(true) @map("is_active")
   mustChangePassword   Boolean  @default(false) @map("must_change_password")
   createdAt            DateTime @default(now()) @map("created_at")
@@ -155,12 +155,36 @@ model Provider5 {
 }
 
 enum HealthcareRegime {
-  CONTRIBUTORY
-  SUBSIDIZED
+  CONTRIBUTIVO
+  SUBSIDIADO
+}
+
+enum DocumentType {
+  CC
+  CD
+  CE
+  CN
+  DE
+  MS
+  NV
+  PA
+  PE
+  PT
+  RC
+  SC
+  SI
+  TI
+}
+
+enum Gender {
+  MASCULINO
+  FEMENINO
 }
 
 model User {
   id            String    @id
+  documentType  DocumentType? @map("document_type")
+  gender        Gender?
   firstName     String    @map("first_name")
   secondName    String?   @map("second_name")
   firstSurname  String    @map("first_surname")
@@ -170,6 +194,7 @@ model User {
   birthDate     DateTime? @map("birth_date")
   birthDateApproximate Boolean @default(false) @map("birth_date_approximate")
   healthcareRegime HealthcareRegime? @map("healthcare_regime")
+  department    String?
   city          String?
   neighborhood  String?
   address       String?
@@ -195,8 +220,6 @@ model Company {
   codeProvider String?  @map("code_provider")
   tokenCompany String?  @map("token_company")
   tokenAuth    String?  @map("token_auth")
-  aiApiKey     String?  @map("ai_api_key")
-  aiModel      String?  @default("gemini-3-flash-preview") @map("ai_model")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -215,13 +238,273 @@ model StopMax {
   @@map("stop_max")
 }
 
-model TvMed {
-  id        Int      @id @default(autoincrement())
-  code      String
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
+model TvData {
+  id            Int      @id @default(autoincrement())
+  code          String
+  name          String
+  inventoryCode String?  @map("inventory_code")
+  price         Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
 
-  @@map("tv_med")
+  @@map("tvmed_mipres")
+}
+
+// Catálogo de referencia: unidades de dispensación (AMPOLLA/CAJA…; sembrado; CRUD en módulo aparte luego).
+model MeasurementUnit {
+  code        Int    @id
+  description String
+
+  eventosDispensing TvMedEvento[] @relation("EventoDispensingUnit")
+  insDispensing     TvInsEvento[] @relation("InsDispensingUnit")
+
+  @@map("measurement_units")
+}
+
+// Catálogo de referencia: unidades de medida científicas (mg, ml, UI…; código + símbolo + descripción).
+model ScientificUnit {
+  code        Int    @id
+  name        String
+  description String
+
+  eventosMeasurement TvMedEvento[] @relation("EventoMeasurementUnit")
+  insMeasurement     TvInsEvento[] @relation("InsMeasurementUnit")
+
+  @@map("scientific_units")
+}
+
+// Catálogo de referencia: formas farmacéuticas (sembrado; CRUD en módulo aparte luego).
+model PharmaceuticalForm {
+  code        String @id
+  description String
+
+  eventos    TvMedEvento[]
+  insEventos TvInsEvento[]
+
+  @@map("pharmaceutical_forms")
+}
+
+// Catálogo de referencia: diagnósticos (código alfanumérico + descripción).
+model Diagnosis {
+  code        String @id
+  description String
+
+  @@map("diagnoses")
+}
+
+// Contrato de evento: vigencia y valores/consumos por régimen (todo en COP, enteros).
+model EventContract {
+  id                   Int      @id @default(autoincrement())
+  contractNumber       String   @unique @map("contract_number") // número del contrato, alfanumérico
+  startDate            DateTime  @map("start_date")
+  endDate              DateTime  @map("end_date")
+  closeDate            DateTime? @map("close_date")
+  totalValue           Int       @map("total_value")
+  contributoryValue    Int      @map("contributory_value")
+  subsidizedValue      Int      @map("subsidized_value")
+  consumedTotal        Int      @default(0) @map("consumed_total")
+  consumedContributory Int      @default(0) @map("consumed_contributory")
+  consumedSubsidized   Int      @default(0) @map("consumed_subsidized")
+  status               String
+  isOpen               Boolean  @default(false) @map("is_open")
+
+  @@map("event_contract")
+}
+
+// Catálogo de estados de radicación de evento (copia independiente de los de MIPRES).
+model FilingEventStatus {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  label        String
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("filing_event_status")
+}
+
+model FilingEventSubstatus {
+  id               Int      @id @default(autoincrement())
+  parentStatusCode String   @map("parent_status_code")
+  code             String
+  label            String
+  displayOrder     Int      @default(0) @map("display_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@unique([parentStatusCode, code])
+  @@map("filing_event_substatus")
+}
+
+// Radicación de evento: un renglón = un medicamento/insumo radicado en un evento.
+// Cabecera de la radicación de evento: lo común a todo el documento (usuario, doctor, fechas).
+// El estado general queda PENDIENTE hasta que TODAS las líneas (filing_event_item) se entreguen.
+model FilingEvent {
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  authorizationCode String    @map("authorization_code")
+  senderCode        String    @default("") @map("sender_code") // IPS remitente: código
+  senderName        String    @default("") @map("sender_name") // IPS remitente: nombre
+  doctorDocument    String    @map("doctor_document")
+  userDocument      String    @map("user_document")
+  userType          String?   @map("user_type") // régimen del usuario (contributivo/subsidiado)
+  prescriptionDate  DateTime  @map("prescription_date")
+  authorizationDate DateTime  @map("authorization_date")
+  requestDate       DateTime  @map("request_date")
+  mainDiagnosis     String    @map("main_diagnosis")  // diagnóstico global de la radicación
+  diagnosisDetail   String    @map("diagnosis_detail")
+  totalValue        Int       @default(0) @map("total_value") // sumatoria de los valores totales de las líneas
+  status            String // estado general: PENDIENTE hasta que todas las líneas estén ENTREGADO
+  filingCode        String?   @map("filing_code") // radicado (de toda la radicación)
+  shelfCode         String?   @map("shelf_code")  // código de estante (de toda la radicación)
+  contractId        Int       @map("contract_id")
+
+  items FilingEventItem[]
+
+  @@index([userDocument])
+  @@index([doctorDocument])
+  @@index([status])
+  @@map("filing_event")
+}
+
+// Línea de la radicación: un medicamento/insumo. Cada línea se entrega y se sigue por separado.
+model FilingEventItem {
+  id                  Int       @id @default(autoincrement())
+  filingEventId       Int       @map("filing_event_id")
+  cum                 String
+  name                String
+  serviceType         String?   @map("service_type") // MEDICAMENTO / INSUMO
+  quantity            Int
+  unitValue           Int       @map("unit_value")
+  totalValue          Int       @map("total_value")
+  concentration       String
+  presentation        String
+  administrationRoute String    @map("administration_route")
+  shortName           String    @map("short_name")
+  measurementUnit     Int       @map("measurement_unit")
+  pharmaceuticalForm  String    @map("pharmaceutical_form")
+  dispensingUnit      Int       @map("dispensing_unit")
+  frequencyPerDay     Int       @map("frequency_per_day")
+  treatmentDuration   Int       @map("treatment_duration")
+  prescribedQuantity  Int       @map("prescribed_quantity")
+  treatmentDays       Int       @map("treatment_days")
+  status              String
+  substatus           String?
+  deliveryDate        DateTime? @map("delivery_date")
+  opportunity         Int?
+  quantityDelivered   Int       @default(0) @map("quantity_delivered")
+  quantityPending     Int       @map("quantity_pending")
+  unfulfilledQuantity Int       @default(0) @map("unfulfilled_quantity") // no entregado al cerrar como completa (restricción legal)
+
+  filing     FilingEvent     @relation(fields: [filingEventId], references: [id], onDelete: Cascade)
+  deliveries DeliveryEvent[]
+  orders     OrderEvent[]
+
+  @@index([filingEventId])
+  @@index([cum])
+  @@index([status])
+  @@map("filing_event_item")
+}
+
+// Entregas de una LÍNEA de radicación de evento (espejo de delivery_mipres, sin campos SISPRO).
+model DeliveryEvent {
+  id                   Int      @id @default(autoincrement())
+  filingEventItemId    Int      @map("filing_event_item_id")
+  deliveryNumber       Int      @map("delivery_number")
+  deliveryType         String   @map("delivery_type")
+  quantityDelivered    Int      @map("quantity_delivered")
+  quantityPendingAfter Int      @map("quantity_pending_after")
+  employeeId           String   @map("employee_id")
+  comment              String?
+  deliveryBatch        String?  @map("delivery_batch")
+  invoiceDate          DateTime? @map("invoice_date") // fecha con la que salen impresos factura y ticket del lote (la real es createdAt)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  item FilingEventItem @relation(fields: [filingEventItemId], references: [id], onDelete: Cascade)
+
+  @@index([filingEventItemId])
+  @@index([deliveryBatch])
+  @@map("delivery_event")
+}
+
+// Pedidos por faltante de una LÍNEA de radicación de evento (espejo de order_mipres).
+model OrderEvent {
+  id                Int      @id @default(autoincrement())
+  filingEventItemId Int      @map("filing_event_item_id")
+  cum               String
+  name              String
+  quantity          Int
+  employeeId        String   @map("employee_id")
+  status            String   @default("POR_PEDIR")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  item FilingEventItem @relation(fields: [filingEventItemId], references: [id], onDelete: Cascade)
+
+  @@index([filingEventItemId])
+  @@index([status])
+  @@index([isActive])
+  @@map("order_event")
+}
+
+model TvMedEvento {
+  id                  Int      @id @default(autoincrement())
+  cum                 String
+  name                String
+  value               Int
+  concentration       String
+  presentation        String
+  administrationRoute String   @map("administration_route")
+  shortName           String   @map("short_name")
+  measurementUnit     Int      @map("measurement_unit")
+  pharmaceuticalForm  String   @map("pharmaceutical_form")
+  dispensingUnit      Int      @map("dispensing_unit")
+  isActive            Boolean  @default(false) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  measurementUnitRef    ScientificUnit     @relation("EventoMeasurementUnit", fields: [measurementUnit], references: [code])
+  dispensingUnitRef     MeasurementUnit    @relation("EventoDispensingUnit", fields: [dispensingUnit], references: [code])
+  pharmaceuticalFormRef PharmaceuticalForm @relation(fields: [pharmaceuticalForm], references: [code])
+
+  @@index([cum])
+  @@map("tvmed_evento")
+}
+
+model TvInsEvento {
+  id                  Int      @id @default(autoincrement())
+  cum                 String
+  name                String
+  value               Int
+  concentration       String
+  presentation        String
+  administrationRoute String   @map("administration_route")
+  shortName           String   @map("short_name")
+  measurementUnit     Int      @map("measurement_unit")
+  pharmaceuticalForm  String   @map("pharmaceutical_form")
+  dispensingUnit      Int      @map("dispensing_unit")
+  isActive            Boolean  @default(false) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  measurementUnitRef    ScientificUnit     @relation("InsMeasurementUnit", fields: [measurementUnit], references: [code])
+  dispensingUnitRef     MeasurementUnit    @relation("InsDispensingUnit", fields: [dispensingUnit], references: [code])
+  pharmaceuticalFormRef PharmaceuticalForm @relation(fields: [pharmaceuticalForm], references: [code])
+
+  @@index([cum])
+  @@map("tvins_evento")
+}
+
+// Servicios de un contrato de evento. code = id de la fila origen (tvmed_evento o tvins_evento)
+// según service (MEDICAMENTO o INSUMO). cum = código del medicamento/insumo. value = valor.
+model ServiceContract {
+  id         Int    @id @default(autoincrement())
+  contractId Int    @map("contract_id") // contrato (event_contract) al que pertenece la copia
+  code       Int
+  cum        String
+  service    String
+  value      Int
+
+  @@map("service_contract")
 }
 
 model PasswordResetOtp {
@@ -237,4 +520,131 @@ model PasswordResetOtp {
 
   @@index([employeeId])
   @@map("password_reset_otps")
+}
+
+model Doctor {
+  id        String   @id
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("doctors")
+}
+
+model FilingMipresStatus {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  label        String
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("filing_mipres_status")
+}
+
+model FilingMipresSubstatus {
+  id               Int      @id @default(autoincrement())
+  parentStatusCode String   @map("parent_status_code")
+  code             String
+  label            String
+  displayOrder     Int      @default(0) @map("display_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@unique([parentStatusCode, code])
+  @@map("filing_mipres_substatus")
+}
+
+model FilingMipres {
+  id                 Int      @id @default(autoincrement())
+  doctorDocument     String   @map("doctor_document")
+  userDocument       String   @map("user_document")
+  prescriptionNumber String   @map("prescription_number")
+  scheduleId         BigInt   @map("schedule_id")
+  routingId          BigInt?  @map("routing_id")
+  deliveryId         BigInt?  @map("delivery_id")
+  deliveryReportId   BigInt?  @map("delivery_report_id")
+  billingId          BigInt?  @map("billing_id")
+  invoiceCode        String?  @map("invoice_code")
+  invoiceDate        DateTime? @map("invoice_date")
+  technologyCode     String   @map("technology_code")
+  inventoryCode      String?  @map("inventory_code")
+  medicationName     String   @map("medication_name")
+  quantityToDeliver  Int      @map("quantity_to_deliver")
+  unitPrice          Int      @map("unit_price")
+  totalPrice         Int      @map("total_price")
+  deliveryDate       DateTime? @map("delivery_date")
+  maxDeliveryDate    DateTime @map("max_delivery_date")
+  filingCode         String?  @map("filing_code")
+  cufe               String?
+  shelfCode          String?  @map("shelf_code")
+  status             String
+  substatus          String?
+  quantityPending    Int      @map("quantity_pending")
+  quantityDelivered  Int      @map("quantity_delivered")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  deliveries         DeliveryMipres[]
+  orders             OrderMipres[]
+
+  @@unique([userDocument, scheduleId])
+  @@index([userDocument])
+  @@index([doctorDocument])
+  @@index([status])
+  @@map("filing_mipres")
+}
+
+// Contador global rotativo para el código de estantería del ticket (A1..Z100, vuelve a A1).
+// Un solo registro (id=1). value = cuántos códigos se han asignado.
+model ShelfCodeCounter {
+  id    Int @id @default(1)
+  value Int @default(0)
+
+  @@map("shelf_code_counter")
+}
+
+// Cada entrega registrada de un filing (completa o parcial). Numeradas 1, 2, 3...
+model DeliveryMipres {
+  id                   Int      @id @default(autoincrement())
+  filingId             Int      @map("filing_id")
+  deliveryNumber       Int      @map("delivery_number")
+  deliveryType         String   @map("delivery_type") // COMPLETA | PARCIAL
+  quantityDelivered    Int      @map("quantity_delivered")
+  quantityPendingAfter Int      @map("quantity_pending_after")
+  scheduleId           BigInt   @map("schedule_id")
+  routingId            BigInt   @map("routing_id")
+  employeeId           String   @map("employee_id")
+  comment              String?
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  filing               FilingMipres @relation(fields: [filingId], references: [id], onDelete: Cascade)
+
+  @@index([filingId])
+  @@map("delivery_mipres")
+}
+
+// Medicamento que queda por pedir (de una entrega parcial o de "sin existencias").
+model OrderMipres {
+  id                 Int      @id @default(autoincrement())
+  filingId           Int      @map("filing_id")
+  technologyCode     String   @map("technology_code")
+  inventoryCode      String?  @map("inventory_code")
+  medicationName     String   @map("medication_name")
+  quantity           Int
+  employeeId         String   @map("employee_id")
+  scheduleId         BigInt   @map("schedule_id")
+  routingId          BigInt   @map("routing_id")
+  prescriptionNumber String   @map("prescription_number")
+  status             String   @default("POR_PEDIR") // POR_PEDIR | PEDIDO_REALIZADO | LISTO
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  filing             FilingMipres    @relation(fields: [filingId], references: [id], onDelete: Cascade)
+
+  @@index([filingId])
+  @@index([status])
+  @@index([isActive])
+  @@map("order_mipres")
 }

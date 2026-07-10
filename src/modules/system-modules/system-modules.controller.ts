@@ -36,38 +36,38 @@ export class SystemModulesController {
   constructor(private readonly service: SystemModulesService) {}
 
   @Get()
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   findAll(@Query() query: ListModulesQuery) {
     return this.service.findAll(query.isActive);
   }
 
   @Get(':id')
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   create(@Body() dto: CreateModuleDto) {
     return this.service.create(dto);
   }
 
   @Patch('reorder')
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   @HttpCode(204)
   reorder(@Body() dto: ReorderModulesDto) {
     return this.service.reorder(dto);
   }
 
   @Patch(':id')
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   update(@Param('id') id: string, @Body() dto: UpdateModuleDto) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @Roles('ADMINISTRADOR')
   @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.service.delete(id);

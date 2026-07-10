@@ -9,29 +9,29 @@ export declare class ProvidersController {
     findAll(): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }>;
     update(id: number, dto: UpdateProviderDto): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }>;
     getTemplate(id: number): Promise<StreamableFile>;
     findProducts(id: number, dto: ListProviderProductsDto): Promise<{

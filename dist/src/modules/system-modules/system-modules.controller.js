@@ -64,7 +64,7 @@ let SystemModulesController = class SystemModulesController {
 exports.SystemModulesController = SystemModulesController;
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [ListModulesQuery]),
@@ -72,7 +72,7 @@ __decorate([
 ], SystemModulesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -80,7 +80,7 @@ __decorate([
 ], SystemModulesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_module_dto_1.CreateModuleDto]),
@@ -88,7 +88,7 @@ __decorate([
 ], SystemModulesController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)('reorder'),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     (0, common_1.HttpCode)(204),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -97,7 +97,7 @@ __decorate([
 ], SystemModulesController.prototype, "reorder", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -106,7 +106,7 @@ __decorate([
 ], SystemModulesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     (0, common_1.HttpCode)(204),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

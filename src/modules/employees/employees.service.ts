@@ -88,7 +88,7 @@ export class EmployeesService {
   async create(dto: CreateStaffDto) {
     await this.assertNoDuplicate({ email: dto.email, username: dto.username, identificationNumber: dto.identificationNumber });
 
-    if (dto.role !== 'ADMIN' && dto.moduleIds?.length) {
+    if (dto.role !== 'ADMINISTRADOR' && dto.moduleIds?.length) {
       const adminOnlyModules = await this.prisma.module.findMany({
         where: { id: { in: dto.moduleIds }, isAdminOnly: true },
         select: { label: true },
@@ -162,7 +162,7 @@ export class EmployeesService {
     const record = await this.prisma.employee.findUnique({ where: { id } });
     if (!record) throw new NotFoundException('Personal no encontrado');
 
-    if (record.role !== 'ADMIN' && dto.moduleIds.length > 0) {
+    if (record.role !== 'ADMINISTRADOR' && dto.moduleIds.length > 0) {
       const adminOnlyModules = await this.prisma.module.findMany({
         where: { id: { in: dto.moduleIds }, isAdminOnly: true },
         select: { label: true },

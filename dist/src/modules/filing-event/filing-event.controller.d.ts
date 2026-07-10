@@ -1,0 +1,422 @@
+import type { Response } from 'express';
+import { FilingEventService } from './filing-event.service';
+import { DriveService } from '../drive/drive.service';
+import { CreateFilingEventDto } from './dto/create-filing-event.dto';
+import { ListFilingEventDto } from './dto/list-filing-event.dto';
+import { RegisterDeliveryEventDto } from './dto/register-delivery-event.dto';
+import { RegisterDeliveryBulkEventDto } from './dto/register-delivery-bulk-event.dto';
+import { SetRadicadoEventDto } from './dto/set-radicado-event.dto';
+import { UpdatePrescriptionEventDto } from './dto/update-prescription-event.dto';
+import { SetInvoiceDateEventDto } from './dto/set-invoice-date-event.dto';
+export declare class FilingEventController {
+    private readonly service;
+    private readonly drive;
+    constructor(service: FilingEventService, drive: DriveService);
+    driveQuota(): Promise<{
+        limitBytes: number | null;
+        usageBytes: number;
+    }>;
+    list(dto: ListFilingEventDto): Promise<{
+        data: {
+            id: number;
+            createdAt: Date;
+            authorizationCode: string;
+            prescriptionDate: Date;
+            authorizationDate: Date;
+            requestDate: Date;
+            userDocument: string;
+            userName: string;
+            userType: string | null;
+            totalValue: number;
+            status: string;
+            itemsCount: number;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        counts: Record<string, number>;
+    }>;
+    findByAuthorization(code: string): Promise<{
+        id: number;
+    } | null>;
+    export(dto: ListFilingEventDto, res: Response): Promise<void>;
+    findOne(id: number): Promise<{
+        id: number;
+        createdAt: Date;
+        authorizationCode: string;
+        senderCode: string;
+        senderName: string;
+        userType: string | null;
+        doctorDocument: string;
+        userDocument: string;
+        prescriptionDate: Date;
+        authorizationDate: Date;
+        requestDate: Date;
+        mainDiagnosis: string;
+        diagnosisDetail: string;
+        totalValue: number;
+        status: string;
+        statusLabel: string;
+        filingCode: string | null;
+        shelfCode: string | null;
+        contractId: number;
+        user: {
+            id: string;
+            documentType: import("@prisma/client").$Enums.DocumentType | null;
+            firstName: string;
+            secondName: string | null;
+            firstSurname: string;
+            secondSurname: string | null;
+            gender: import("@prisma/client").$Enums.Gender | null;
+            birthDate: Date | null;
+            healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+            department: string | null;
+            city: string | null;
+            neighborhood: string | null;
+            address: string | null;
+            phone: string;
+            email: string | null;
+            description: string | null;
+        } | null;
+        doctor: {
+            document: string;
+            name: string;
+        } | null;
+        items: {
+            statusLabel: string;
+            substatusLabel: string | null;
+            measurementUnitName: string;
+            dispensingUnitName: string;
+            pharmaceuticalFormName: string;
+            id: number;
+            name: string;
+            measurementUnit: number;
+            pharmaceuticalForm: string;
+            cum: string;
+            status: string;
+            substatus: string | null;
+            quantity: number;
+            deliveryDate: Date | null;
+            quantityPending: number;
+            quantityDelivered: number;
+            concentration: string;
+            presentation: string;
+            administrationRoute: string;
+            shortName: string;
+            dispensingUnit: number;
+            totalValue: number;
+            serviceType: string | null;
+            unitValue: number;
+            frequencyPerDay: number;
+            treatmentDuration: number;
+            prescribedQuantity: number;
+            treatmentDays: number;
+            opportunity: number | null;
+            unfulfilledQuantity: number;
+            filingEventId: number;
+        }[];
+    }>;
+    setRadicado(id: number, dto: SetRadicadoEventDto): Promise<{
+        id: number;
+        createdAt: Date;
+        authorizationCode: string;
+        senderCode: string;
+        senderName: string;
+        userType: string | null;
+        doctorDocument: string;
+        userDocument: string;
+        prescriptionDate: Date;
+        authorizationDate: Date;
+        requestDate: Date;
+        mainDiagnosis: string;
+        diagnosisDetail: string;
+        totalValue: number;
+        status: string;
+        statusLabel: string;
+        filingCode: string | null;
+        shelfCode: string | null;
+        contractId: number;
+        user: {
+            id: string;
+            documentType: import("@prisma/client").$Enums.DocumentType | null;
+            firstName: string;
+            secondName: string | null;
+            firstSurname: string;
+            secondSurname: string | null;
+            gender: import("@prisma/client").$Enums.Gender | null;
+            birthDate: Date | null;
+            healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+            department: string | null;
+            city: string | null;
+            neighborhood: string | null;
+            address: string | null;
+            phone: string;
+            email: string | null;
+            description: string | null;
+        } | null;
+        doctor: {
+            document: string;
+            name: string;
+        } | null;
+        items: {
+            statusLabel: string;
+            substatusLabel: string | null;
+            measurementUnitName: string;
+            dispensingUnitName: string;
+            pharmaceuticalFormName: string;
+            id: number;
+            name: string;
+            measurementUnit: number;
+            pharmaceuticalForm: string;
+            cum: string;
+            status: string;
+            substatus: string | null;
+            quantity: number;
+            deliveryDate: Date | null;
+            quantityPending: number;
+            quantityDelivered: number;
+            concentration: string;
+            presentation: string;
+            administrationRoute: string;
+            shortName: string;
+            dispensingUnit: number;
+            totalValue: number;
+            serviceType: string | null;
+            unitValue: number;
+            frequencyPerDay: number;
+            treatmentDuration: number;
+            prescribedQuantity: number;
+            treatmentDays: number;
+            opportunity: number | null;
+            unfulfilledQuantity: number;
+            filingEventId: number;
+        }[];
+    }>;
+    updatePrescription(itemId: number, dto: UpdatePrescriptionEventDto): Promise<{
+        id: number;
+        createdAt: Date;
+        authorizationCode: string;
+        senderCode: string;
+        senderName: string;
+        userType: string | null;
+        doctorDocument: string;
+        userDocument: string;
+        prescriptionDate: Date;
+        authorizationDate: Date;
+        requestDate: Date;
+        mainDiagnosis: string;
+        diagnosisDetail: string;
+        totalValue: number;
+        status: string;
+        statusLabel: string;
+        filingCode: string | null;
+        shelfCode: string | null;
+        contractId: number;
+        user: {
+            id: string;
+            documentType: import("@prisma/client").$Enums.DocumentType | null;
+            firstName: string;
+            secondName: string | null;
+            firstSurname: string;
+            secondSurname: string | null;
+            gender: import("@prisma/client").$Enums.Gender | null;
+            birthDate: Date | null;
+            healthcareRegime: import("@prisma/client").$Enums.HealthcareRegime | null;
+            department: string | null;
+            city: string | null;
+            neighborhood: string | null;
+            address: string | null;
+            phone: string;
+            email: string | null;
+            description: string | null;
+        } | null;
+        doctor: {
+            document: string;
+            name: string;
+        } | null;
+        items: {
+            statusLabel: string;
+            substatusLabel: string | null;
+            measurementUnitName: string;
+            dispensingUnitName: string;
+            pharmaceuticalFormName: string;
+            id: number;
+            name: string;
+            measurementUnit: number;
+            pharmaceuticalForm: string;
+            cum: string;
+            status: string;
+            substatus: string | null;
+            quantity: number;
+            deliveryDate: Date | null;
+            quantityPending: number;
+            quantityDelivered: number;
+            concentration: string;
+            presentation: string;
+            administrationRoute: string;
+            shortName: string;
+            dispensingUnit: number;
+            totalValue: number;
+            serviceType: string | null;
+            unitValue: number;
+            frequencyPerDay: number;
+            treatmentDuration: number;
+            prescribedQuantity: number;
+            treatmentDays: number;
+            opportunity: number | null;
+            unfulfilledQuantity: number;
+            filingEventId: number;
+        }[];
+    }>;
+    assignShelfCode(id: number): Promise<{
+        shelfCode: string;
+    }>;
+    listDeliveries(itemId: number): Promise<{
+        id: number;
+        deliveryNumber: number;
+        deliveryType: string;
+        quantityDelivered: number;
+        quantityPendingAfter: number;
+        comment: string | null;
+        deliveryBatch: string | null;
+        employeeId: string;
+        employeeName: string;
+        createdAt: Date;
+    }[]>;
+    listFilingDeliveries(id: number): Promise<{
+        id: number;
+        itemId: number;
+        medication: string;
+        name: string;
+        cum: string;
+        deliveryNumber: number;
+        deliveryType: string;
+        quantityDelivered: number;
+        quantityPendingAfter: number;
+        comment: string | null;
+        deliveryBatch: string | null;
+        invoiceDate: Date | null;
+        employeeName: string;
+        createdAt: Date;
+    }[]>;
+    setBatchInvoiceDate(id: number, batch: string, dto: SetInvoiceDateEventDto): Promise<{
+        ok: boolean;
+        count: number;
+    }>;
+    registerDelivery(itemId: number, dto: RegisterDeliveryEventDto, req: {
+        user: {
+            sub: string;
+        };
+    }): Promise<{
+        ok: boolean;
+        status: string;
+        substatus: string;
+        delivered: number;
+        pendingAfter: number;
+        headerStatus: string;
+    }>;
+    registerDeliveryBulk(id: number, dto: RegisterDeliveryBulkEventDto, req: {
+        user: {
+            sub: string;
+        };
+    }): Promise<{
+        ok: boolean;
+        batchCode: string;
+        headerStatus: string;
+        lines: {
+            itemId: number;
+            delivered: number;
+            pendingAfter: number;
+            status: string;
+            substatus: string;
+        }[];
+    }>;
+    filesRoot(id: number): Promise<{
+        rootId: string;
+        folderId: string;
+        path: {
+            id: string;
+            name: string;
+        }[];
+        items: import("../drive/drive.service").DriveItem[];
+    }>;
+    filesTree(id: number): Promise<{
+        rootId: string;
+        tree: import("../drive/drive.service").FolderNode[];
+    }>;
+    createFolder(id: number, folderId: string, body: {
+        name: string;
+    }): Promise<import("../drive/drive.service").DriveItem>;
+    uploadFile(id: number, folderId: string, file: {
+        originalname: string;
+        mimetype: string;
+        buffer: Buffer;
+    }): Promise<import("../drive/drive.service").DriveItem>;
+    fileContent(id: number, itemId: string, disposition: string, res: Response): Promise<void>;
+    filesList(id: number, folderId: string): Promise<{
+        rootId: string;
+        folderId: string;
+        path: {
+            id: string;
+            name: string;
+        }[];
+        items: import("../drive/drive.service").DriveItem[];
+    }>;
+    deleteItem(id: number, itemId: string): Promise<{
+        ok: true;
+    }>;
+    extractPdf(file: Express.Multer.File): Promise<{
+        data: unknown;
+    }>;
+    create(dto: CreateFilingEventDto): Promise<{
+        items: {
+            id: number;
+            name: string;
+            measurementUnit: number;
+            pharmaceuticalForm: string;
+            cum: string;
+            status: string;
+            substatus: string | null;
+            quantity: number;
+            deliveryDate: Date | null;
+            quantityPending: number;
+            quantityDelivered: number;
+            concentration: string;
+            presentation: string;
+            administrationRoute: string;
+            shortName: string;
+            dispensingUnit: number;
+            totalValue: number;
+            serviceType: string | null;
+            unitValue: number;
+            frequencyPerDay: number;
+            treatmentDuration: number;
+            prescribedQuantity: number;
+            treatmentDays: number;
+            opportunity: number | null;
+            unfulfilledQuantity: number;
+            filingEventId: number;
+        }[];
+    } & {
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        status: string;
+        filingCode: string | null;
+        userDocument: string;
+        doctorDocument: string;
+        shelfCode: string | null;
+        totalValue: number;
+        authorizationCode: string;
+        senderCode: string;
+        senderName: string;
+        prescriptionDate: Date;
+        authorizationDate: Date;
+        requestDate: Date;
+        mainDiagnosis: string;
+        userType: string | null;
+        diagnosisDetail: string;
+        contractId: number;
+    }>;
+}

@@ -19,7 +19,7 @@ import { ListStaffDto } from './dto/list-staff.dto';
 
 @Controller('employees')
 @UseGuards(RolesGuard)
-@Roles('ADMIN')
+@Roles('ADMINISTRADOR')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 

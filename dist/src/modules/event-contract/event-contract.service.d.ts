@@ -1,0 +1,97 @@
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateEventContractDto } from './dto/create-event-contract.dto';
+import { FinalizeEventContractDto } from './dto/finalize-event-contract.dto';
+export declare class EventContractService {
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    findAll(): import("@prisma/client").Prisma.PrismaPromise<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    }[]>;
+    findActive(): import("@prisma/client").Prisma.Prisma__EventContractClient<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    } | null, null, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    findOne(id: number): Promise<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    }>;
+    create(dto: CreateEventContractDto): Promise<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    }>;
+    setOpen(id: number, isOpen: boolean): Promise<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    }>;
+    finalize(id: number, dto: FinalizeEventContractDto): Promise<{
+        id: number;
+        status: string;
+        contractNumber: string;
+        startDate: Date;
+        endDate: Date;
+        contributoryValue: number;
+        subsidizedValue: number;
+        closeDate: Date | null;
+        totalValue: number;
+        consumedTotal: number;
+        consumedContributory: number;
+        consumedSubsidized: number;
+        isOpen: boolean;
+    }>;
+}

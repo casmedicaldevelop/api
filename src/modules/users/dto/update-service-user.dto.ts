@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { HealthcareRegime } from '@prisma/client';
+import { DocumentType, Gender, HealthcareRegime } from '@prisma/client';
 
 const toUpper = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim().toUpperCase() : value;
@@ -23,6 +23,14 @@ const toUpperOrNull = ({ value }: { value: unknown }) => {
 };
 
 export class UpdateServiceUserDto {
+  @IsOptional()
+  @IsEnum(DocumentType, { message: 'Tipo de documento inválido' })
+  documentType?: DocumentType;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Género inválido' })
+  gender?: Gender;
+
   @Transform(toUpper)
   @IsOptional()
   @IsString()
@@ -71,6 +79,12 @@ export class UpdateServiceUserDto {
   @IsOptional()
   @IsEnum(HealthcareRegime, { message: 'Régimen de salud inválido' })
   healthcareRegime?: HealthcareRegime;
+
+  @Transform(toUpper)
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  department?: string;
 
   @Transform(toUpper)
   @IsOptional()

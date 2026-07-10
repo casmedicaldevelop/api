@@ -5,10 +5,85 @@ import {
 import { ConfigService } from '@nestjs/config'
 import { CompanyService } from '../company/company.service'
 import { UsersService } from '../users/users.service'
+import { FilingMipresService } from '../filing-mipres/filing-mipres.service'
 import { UpstreamFailureException } from '../../common/filters/upstream-failure.exception'
+import type { User } from '@prisma/client'
 import type { WorkspaceResponse } from './types/workspace.response'
 
 const SISPRO_TIMEOUT_MS = 15_000
+
+function isFilled(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  if (typeof value === 'string') return value.trim() !== ''
+  return true
+}
+
+function isUserComplete(user: User): boolean {
+  return (
+    isFilled(user.documentType) &&
+    isFilled(user.gender) &&
+    isFilled(user.firstName) &&
+    isFilled(user.secondName) &&
+    isFilled(user.firstSurname) &&
+    isFilled(user.secondSurname) &&
+    isFilled(user.phone) &&
+    isFilled(user.email) &&
+    isFilled(user.birthDate) &&
+    isFilled(user.healthcareRegime) &&
+    isFilled(user.city) &&
+    isFilled(user.neighborhood) &&
+    isFilled(user.address)
+  )
+}
+
+/**
+ * SISPRO responde `PUT /api/Programacion` con `[{ Id, IdProgramacion }]`.
+ * Devuelve el IdProgramacion (> 0) o null si la forma no es la esperada.
+ */
+function extractIdProgramacion(response: unknown): number | null {
+  const item = Array.isArray(response) ? response[0] : response
+  if (!item || typeof item !== 'object') return null
+  const raw = (item as { IdProgramacion?: unknown }).IdProgramacion
+  const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw
+  return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null
+}
+
+/**
+ * SISPRO responde `PUT /api/Entrega` con `[{ Id, IdEntrega }]`.
+ * Devuelve el IdEntrega (> 0) o null si la forma no es la esperada.
+ */
+function extractIdEntrega(response: unknown): number | null {
+  const item = Array.isArray(response) ? response[0] : response
+  if (!item || typeof item !== 'object') return null
+  const raw = (item as { IdEntrega?: unknown }).IdEntrega
+  const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw
+  return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null
+}
+
+/**
+ * SISPRO responde `PUT /api/ReporteEntrega` con `[{ Id, IdReporteEntrega }]`.
+ * Devuelve el IdReporteEntrega (> 0) o null si la forma no es la esperada.
+ */
+function extractIdReporteEntrega(response: unknown): number | null {
+  const item = Array.isArray(response) ? response[0] : response
+  if (!item || typeof item !== 'object') return null
+  const raw = (item as { IdReporteEntrega?: unknown }).IdReporteEntrega
+  const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw
+  return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null
+}
+
+/**
+ * SISPRO responde `PUT /api/Facturacion` con `[{ Id, IdFacturacion }]`
+ * (verificado contra respuesta real). El número de factura es `IdFacturacion`.
+ * Devuelve el IdFacturacion (> 0) o null si la forma no es la esperada.
+ */
+function extractIdFacturacion(response: unknown): number | null {
+  const item = Array.isArray(response) ? response[0] : response
+  if (!item || typeof item !== 'object') return null
+  const raw = (item as { IdFacturacion?: unknown }).IdFacturacion
+  const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw
+  return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null
+}
 
 function isNetworkError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
@@ -37,6 +112,7 @@ export class MipresService {
     private readonly configService: ConfigService,
     private readonly companyService: CompanyService,
     private readonly usersService: UsersService,
+    private readonly filingService: FilingMipresService,
   ) {
     this.baseUrl = this.configService.get<string>('MIPRES_API_URL', 'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS')
     this.facBaseUrl = this.configService.get<string>('MIPRES_FAC_API_URL', 'https://wsmipres.sispro.gov.co/WSFACMIPRESNOPBS')
@@ -145,10 +221,11 @@ export class MipresService {
     const user = noDoc ? await this.usersService.findOneOrNull(noDoc) : null
 
     if (user) {
+      const isComplete = isUserComplete(user)
       return {
         prescriptionNumber,
         routings,
-        patient: { exists: true, user },
+        patient: { exists: true, isComplete, user },
       }
     }
 
@@ -169,9 +246,16 @@ export class MipresService {
     codSedeProv: string
     codSerTecAEntregar: string
     cantTotAEntregar: string
+    doctorDocument: string
+    userDocument: string
+    prescriptionNumber: string
+    medicationName: string
+    inventoryCode?: string | null
+    unitPrice: number
   }) {
     const { nit, tokenAuth } = await this.getCreds()
-    return this.put(
+    // 1. Amarre en SISPRO. `put` lanza si la respuesta no es 200.
+    const sispro = await this.put<unknown>(
       `/api/Programacion/${this.enc(nit)}/${this.enc(tokenAuth)}`,
       {
         ID: Number(body.miPresDireccionId),
@@ -183,6 +267,32 @@ export class MipresService {
         CantTotAEntregar: body.cantTotAEntregar,
       },
     )
+
+    // 2. Solo si la respuesta es correcta (trae IdProgramacion válido) se
+    //    registra el radicado local.
+    const idProgramacion = extractIdProgramacion(sispro)
+    if (idProgramacion === null) {
+      throw new BadRequestException(
+        'SISPRO no devolvió un IdProgramacion válido; el radicado no se registró',
+      )
+    }
+
+    const quantityToDeliver = Number.parseInt(body.cantTotAEntregar, 10)
+    const filing = await this.filingService.createFromBinding({
+      doctorDocument: body.doctorDocument,
+      userDocument: body.userDocument,
+      prescriptionNumber: body.prescriptionNumber,
+      scheduleId: BigInt(idProgramacion),
+      routingId: BigInt(body.miPresDireccionId),
+      technologyCode: body.codSerTecAEntregar,
+      inventoryCode: body.inventoryCode ?? null,
+      medicationName: body.medicationName,
+      quantityToDeliver,
+      unitPrice: body.unitPrice,
+      maxDeliveryDate: new Date(body.fecMaxEnt),
+    })
+
+    return { sispro, filing }
   }
 
   async getSchedulesByPrescription(prescriptionNumber: string) {
@@ -194,9 +304,12 @@ export class MipresService {
 
   async cancelSchedule(scheduleId: string) {
     const { nit, tokenAuth } = await this.getCreds()
-    return this.put(
+    // Solo si SISPRO confirma la anulación (put no lanza) se borra el filing local.
+    const result = await this.put(
       `/api/AnularProgramacion/${this.enc(nit)}/${this.enc(tokenAuth)}/${this.enc(scheduleId)}`,
     )
+    await this.filingService.deleteBySchedule(BigInt(scheduleId))
+    return result
   }
 
   // ── Delivery ──────────────────────────────────────────────────────────────
@@ -227,7 +340,7 @@ export class MipresService {
     noIdRecibe: string
   }) {
     const { nit, tokenAuth } = await this.getCreds()
-    return this.put(
+    const sispro = await this.put(
       `/api/Entrega/${this.enc(nit)}/${this.enc(tokenAuth)}`,
       {
         ID: Number(body.miPresDireccionId),
@@ -241,6 +354,19 @@ export class MipresService {
         NoIDRecibe: body.noIdRecibe,
       },
     )
+
+    // Trazabilidad en el radicado del direccionamiento (siempre único):
+    // delivery_id ← IdEntrega de SISPRO, delivery_date ← fecha de la entrega.
+    const idEntrega = extractIdEntrega(sispro)
+    if (idEntrega !== null) {
+      await this.filingService.setDeliveryByRouting(
+        BigInt(body.miPresDireccionId),
+        BigInt(idEntrega),
+        new Date(body.fecEntrega),
+      )
+    }
+
+    return sispro
   }
 
   // ── DeliveryReport (Tx -7-) ──────────────────────────────────────────────
@@ -251,9 +377,10 @@ export class MipresService {
   async createDeliveryReport(body: {
     miPresEntregaId: string
     valorEntregado: string
+    deliveryId: string
   }) {
     const { nit, tokenAuth } = await this.getCreds()
-    return this.put(
+    const sispro = await this.put(
       `/api/ReporteEntrega/${this.enc(nit)}/${this.enc(tokenAuth)}`,
       {
         ID: Number(body.miPresEntregaId),
@@ -262,6 +389,18 @@ export class MipresService {
         ValorEntregado: body.valorEntregado,
       },
     )
+
+    // Trazabilidad local: en el radicado cuyo delivery_id = IDEntrega, persiste
+    // delivery_report_id ← IdReporteEntrega que devolvió SISPRO.
+    const idReporte = extractIdReporteEntrega(sispro)
+    if (idReporte !== null) {
+      await this.filingService.setDeliveryReportByDelivery(
+        BigInt(body.deliveryId),
+        BigInt(idReporte),
+      )
+    }
+
+    return sispro
   }
 
   async getDeliveryReportsByPrescription(prescriptionNumber: string) {
@@ -299,12 +438,28 @@ export class MipresService {
     ValorTotFacturado: string
     CuotaModer: string
     Copago: string
+    deliveryReportId: string
   }) {
+    // deliveryReportId no va a SISPRO: solo para la persistencia local.
+    const { deliveryReportId, ...sisproBody } = body
     const { nit, tokenAuth } = await this.getCreds()
-    return this.putFac(
+    const sispro = await this.putFac(
       `/api/Facturacion/${this.enc(nit)}/${this.enc(tokenAuth)}`,
-      body,
+      sisproBody,
     )
+
+    // Trazabilidad local: en el radicado cuyo delivery_report_id = IDReporteEntrega,
+    // persiste billing_id ← IDFacturacion (SISPRO) e invoice_code ← NoFactura.
+    const idFactura = extractIdFacturacion(sispro)
+    if (idFactura !== null) {
+      await this.filingService.setBillingByDeliveryReport(
+        BigInt(deliveryReportId),
+        BigInt(idFactura),
+        sisproBody.NoFactura,
+      )
+    }
+
+    return sispro
   }
 
   async getFacturacionesByPrescription(prescriptionNumber: string) {

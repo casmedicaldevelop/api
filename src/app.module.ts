@@ -13,7 +13,17 @@ import { CompanyModule } from './modules/company/company.module';
 import { CronModule } from './modules/cron/cron.module';
 import { StopMaxModule } from './modules/stop-max/stop-max.module';
 import { MipresModule } from './modules/mipres/mipres.module';
-import { TvMedModule } from './modules/tv-med/tv-med.module';
+import { TvDataModule } from './modules/tv-data/tv-data.module';
+import { TvMedEventoModule } from './modules/tvmed-evento/tvmed-evento.module';
+import { TvInsEventoModule } from './modules/tvins-evento/tvins-evento.module';
+import { CatalogsModule } from './modules/catalogs/catalogs.module';
+import { EventContractModule } from './modules/event-contract/event-contract.module';
+import { FilingEventModule } from './modules/filing-event/filing-event.module';
+import { FilingMipresModule } from './modules/filing-mipres/filing-mipres.module';
+import { FilingMipresCatalogModule } from './modules/filing-mipres-catalog/filing-mipres-catalog.module';
+import { DoctorsModule } from './modules/doctors/doctors.module';
+import { DiagnosesModule } from './modules/diagnoses/diagnoses.module';
+import { DriveModule } from './modules/drive/drive.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { MustChangePasswordGuard } from './modules/auth/guards/must-change-password.guard';
 
@@ -32,7 +42,17 @@ import { MustChangePasswordGuard } from './modules/auth/guards/must-change-passw
     CronModule,
     StopMaxModule,
     MipresModule,
-    TvMedModule,
+    TvDataModule,
+    TvMedEventoModule,
+    TvInsEventoModule,
+    CatalogsModule,
+    EventContractModule,
+    FilingEventModule,
+    FilingMipresModule,
+    FilingMipresCatalogModule,
+    DoctorsModule,
+    DiagnosesModule,
+    DriveModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

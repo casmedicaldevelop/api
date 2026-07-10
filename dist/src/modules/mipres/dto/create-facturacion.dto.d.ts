@@ -15,4 +15,5 @@ export declare class CreateFacturacionDto {
     ValorTotFacturado: string;
     CuotaModer: string;
     Copago: string;
+    deliveryReportId: string;
 }

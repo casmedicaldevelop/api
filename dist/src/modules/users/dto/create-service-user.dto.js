@@ -16,6 +16,8 @@ const client_1 = require("@prisma/client");
 const toUpper = ({ value }) => typeof value === 'string' ? value.trim().toUpperCase() : value;
 class CreateServiceUserDto {
     id;
+    documentType;
+    gender;
     firstName;
     secondName;
     firstSurname;
@@ -25,6 +27,7 @@ class CreateServiceUserDto {
     birthDate;
     birthDateApproximate;
     healthcareRegime;
+    department;
     city;
     neighborhood;
     address;
@@ -39,6 +42,16 @@ __decorate([
     (0, class_validator_1.MaxLength)(20, { message: 'La cédula no puede superar 20 dígitos' }),
     __metadata("design:type", String)
 ], CreateServiceUserDto.prototype, "id", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.DocumentType, { message: 'Tipo de documento inválido' }),
+    __metadata("design:type", String)
+], CreateServiceUserDto.prototype, "documentType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.Gender, { message: 'Género inválido' }),
+    __metadata("design:type", String)
+], CreateServiceUserDto.prototype, "gender", void 0);
 __decorate([
     (0, class_transformer_1.Transform)(toUpper),
     (0, class_validator_1.IsString)(),
@@ -95,6 +108,13 @@ __decorate([
     (0, class_validator_1.IsEnum)(client_1.HealthcareRegime, { message: 'Régimen de salud inválido' }),
     __metadata("design:type", String)
 ], CreateServiceUserDto.prototype, "healthcareRegime", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(toUpper),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
+    __metadata("design:type", String)
+], CreateServiceUserDto.prototype, "department", void 0);
 __decorate([
     (0, class_transformer_1.Transform)(toUpper),
     (0, class_validator_1.IsOptional)(),

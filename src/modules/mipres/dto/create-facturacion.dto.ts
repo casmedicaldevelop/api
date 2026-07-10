@@ -70,4 +70,10 @@ export class CreateFacturacionDto {
 
   @Matches(/^\d+$/, { message: 'Copago must be digits only' })
   Copago!: string
+
+  /** IDReporteEntrega. Solo para la persistencia local (actualizar billing_id +
+   *  invoice_code del radicado); NO se envía a SISPRO. */
+  @IsString()
+  @IsNotEmpty()
+  deliveryReportId!: string
 }

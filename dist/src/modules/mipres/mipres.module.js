@@ -12,12 +12,13 @@ const mipres_controller_1 = require("./mipres.controller");
 const mipres_service_1 = require("./mipres.service");
 const company_module_1 = require("../company/company.module");
 const users_module_1 = require("../users/users.module");
+const filing_mipres_module_1 = require("../filing-mipres/filing-mipres.module");
 let MipresModule = class MipresModule {
 };
 exports.MipresModule = MipresModule;
 exports.MipresModule = MipresModule = __decorate([
     (0, common_1.Module)({
-        imports: [company_module_1.CompanyModule, users_module_1.UsersModule],
+        imports: [company_module_1.CompanyModule, users_module_1.UsersModule, filing_mipres_module_1.FilingMipresModule],
         controllers: [mipres_controller_1.MipresController],
         providers: [mipres_service_1.MipresService],
     })

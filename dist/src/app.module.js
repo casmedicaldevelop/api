@@ -22,7 +22,17 @@ const company_module_1 = require("./modules/company/company.module");
 const cron_module_1 = require("./modules/cron/cron.module");
 const stop_max_module_1 = require("./modules/stop-max/stop-max.module");
 const mipres_module_1 = require("./modules/mipres/mipres.module");
-const tv_med_module_1 = require("./modules/tv-med/tv-med.module");
+const tv_data_module_1 = require("./modules/tv-data/tv-data.module");
+const tvmed_evento_module_1 = require("./modules/tvmed-evento/tvmed-evento.module");
+const tvins_evento_module_1 = require("./modules/tvins-evento/tvins-evento.module");
+const catalogs_module_1 = require("./modules/catalogs/catalogs.module");
+const event_contract_module_1 = require("./modules/event-contract/event-contract.module");
+const filing_event_module_1 = require("./modules/filing-event/filing-event.module");
+const filing_mipres_module_1 = require("./modules/filing-mipres/filing-mipres.module");
+const filing_mipres_catalog_module_1 = require("./modules/filing-mipres-catalog/filing-mipres-catalog.module");
+const doctors_module_1 = require("./modules/doctors/doctors.module");
+const diagnoses_module_1 = require("./modules/diagnoses/diagnoses.module");
+const drive_module_1 = require("./modules/drive/drive.module");
 const jwt_auth_guard_1 = require("./modules/auth/guards/jwt-auth.guard");
 const must_change_password_guard_1 = require("./modules/auth/guards/must-change-password.guard");
 let AppModule = class AppModule {
@@ -44,7 +54,17 @@ exports.AppModule = AppModule = __decorate([
             cron_module_1.CronModule,
             stop_max_module_1.StopMaxModule,
             mipres_module_1.MipresModule,
-            tv_med_module_1.TvMedModule,
+            tv_data_module_1.TvDataModule,
+            tvmed_evento_module_1.TvMedEventoModule,
+            tvins_evento_module_1.TvInsEventoModule,
+            catalogs_module_1.CatalogsModule,
+            event_contract_module_1.EventContractModule,
+            filing_event_module_1.FilingEventModule,
+            filing_mipres_module_1.FilingMipresModule,
+            filing_mipres_catalog_module_1.FilingMipresCatalogModule,
+            doctors_module_1.DoctorsModule,
+            diagnoses_module_1.DiagnosesModule,
+            drive_module_1.DriveModule,
         ],
         providers: [
             { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },

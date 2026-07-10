@@ -136,7 +136,7 @@ let AuthService = class AuthService {
             },
         });
         let modules;
-        if (employee.role === 'ADMIN') {
+        if (employee.role === 'ADMINISTRADOR') {
             const allModules = await this.prisma.module.findMany({
                 orderBy: { displayOrder: 'asc' },
             });

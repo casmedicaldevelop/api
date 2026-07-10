@@ -122,7 +122,7 @@ export class AuthService {
 
     let modules: Array<{ name: string; label: string; icon: string }>;
 
-    if (employee.role === 'ADMIN') {
+    if (employee.role === 'ADMINISTRADOR') {
       const allModules = await this.prisma.module.findMany({
         orderBy: { displayOrder: 'asc' },
       });

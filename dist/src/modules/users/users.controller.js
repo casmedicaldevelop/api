@@ -16,13 +16,16 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const users_service_1 = require("./users.service");
+const drive_service_1 = require("../drive/drive.service");
 const create_service_user_dto_1 = require("./dto/create-service-user.dto");
 const update_service_user_dto_1 = require("./dto/update-service-user.dto");
 const list_service_users_dto_1 = require("./dto/list-service-users.dto");
 let UsersController = class UsersController {
     usersService;
-    constructor(usersService) {
+    drive;
+    constructor(usersService, drive) {
         this.usersService = usersService;
+        this.drive = drive;
     }
     findAll(dto) {
         return this.usersService.findAll(dto);
@@ -30,6 +33,9 @@ let UsersController = class UsersController {
     getTemplate() {
         const buffer = this.usersService.getTemplate();
         return new common_1.StreamableFile(buffer);
+    }
+    driveQuota() {
+        return this.drive.getQuota();
     }
     findOne(id) {
         return this.usersService.findOne(id);
@@ -42,6 +48,31 @@ let UsersController = class UsersController {
     }
     bulkImport(file) {
         return this.usersService.bulkImport(file);
+    }
+    filesRoot(id) {
+        return this.usersService.filesRoot(id);
+    }
+    filesTree(id) {
+        return this.usersService.filesTree(id);
+    }
+    createFolder(id, folderId, body) {
+        return this.usersService.filesCreateFolder(id, folderId, body?.name);
+    }
+    uploadFile(id, folderId, file) {
+        return this.usersService.filesUpload(id, folderId, file);
+    }
+    async fileContent(id, itemId, disposition, res) {
+        const { stream, mimeType, name } = await this.usersService.filesContent(id, itemId);
+        const mode = disposition === 'attachment' ? 'attachment' : 'inline';
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `${mode}; filename="${encodeURIComponent(name)}"`);
+        stream.pipe(res);
+    }
+    filesList(id, folderId) {
+        return this.usersService.filesList(id, folderId);
+    }
+    deleteItem(id, itemId) {
+        return this.usersService.filesDelete(id, itemId);
     }
 };
 exports.UsersController = UsersController;
@@ -60,6 +91,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", common_1.StreamableFile)
 ], UsersController.prototype, "getTemplate", null);
+__decorate([
+    (0, common_1.Get)('drive-quota'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "driveQuota", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -91,8 +128,68 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "bulkImport", null);
+__decorate([
+    (0, common_1.Get)(':id/files'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "filesRoot", null);
+__decorate([
+    (0, common_1.Get)(':id/files-tree'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "filesTree", null);
+__decorate([
+    (0, common_1.Post)(':id/files/:folderId/folders'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('folderId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "createFolder", null);
+__decorate([
+    (0, common_1.Post)(':id/files/:folderId'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('folderId')),
+    __param(2, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "uploadFile", null);
+__decorate([
+    (0, common_1.Get)(':id/files/:itemId/content'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('itemId')),
+    __param(2, (0, common_1.Query)('disposition')),
+    __param(3, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "fileContent", null);
+__decorate([
+    (0, common_1.Get)(':id/files/:folderId'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('folderId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "filesList", null);
+__decorate([
+    (0, common_1.Delete)(':id/files/:itemId'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('itemId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "deleteItem", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        drive_service_1.DriveService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

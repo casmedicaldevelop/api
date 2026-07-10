@@ -5,6 +5,12 @@ export class CreateDeliveryReportDto {
   @IsNotEmpty()
   miPresEntregaId!: string
 
+  /** IDEntrega de la entrega. Se usa solo para la persistencia local
+   *  (actualizar delivery_report_id del radicado), no se envía a SISPRO. */
+  @IsString()
+  @IsNotEmpty()
+  deliveryId!: string
+
   /**
    * SISPRO expects `ValorEntregado` as a string of digits (no decimals, no
    * thousand separators). The regex blocks anything other than digits.

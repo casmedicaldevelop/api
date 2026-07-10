@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const company_service_1 = require("./company.service");
 const upsert_company_dto_1 = require("./dto/upsert-company.dto");
 const update_mipres_dto_1 = require("./dto/update-mipres.dto");
-const update_ai_dto_1 = require("./dto/update-ai.dto");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 let CompanyController = class CompanyController {
@@ -38,9 +37,6 @@ let CompanyController = class CompanyController {
         await this.companyService.generateMipresToken();
         return this.companyService.getCompany();
     }
-    updateAi(dto) {
-        return this.companyService.updateAi(dto);
-    }
 };
 exports.CompanyController = CompanyController;
 __decorate([
@@ -51,6 +47,8 @@ __decorate([
 ], CompanyController.prototype, "getCompany", null);
 __decorate([
     (0, common_1.Put)(),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -59,6 +57,8 @@ __decorate([
 ], CompanyController.prototype, "upsertCompany", null);
 __decorate([
     (0, common_1.Patch)('mipres'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -67,23 +67,15 @@ __decorate([
 ], CompanyController.prototype, "updateMipres", null);
 __decorate([
     (0, common_1.Post)('mipres/refresh-token'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CompanyController.prototype, "refreshMipresToken", null);
-__decorate([
-    (0, common_1.Patch)('ai'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [update_ai_dto_1.UpdateAiDto]),
-    __metadata("design:returntype", void 0)
-], CompanyController.prototype, "updateAi", null);
 exports.CompanyController = CompanyController = __decorate([
     (0, common_1.Controller)('company'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('ADMIN'),
     __metadata("design:paramtypes", [company_service_1.CompanyService])
 ], CompanyController);
 //# sourceMappingURL=company.controller.js.map

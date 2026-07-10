@@ -2,7 +2,6 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { UpsertCompanyDto } from './dto/upsert-company.dto'
 import { UpdateMipresDto } from './dto/update-mipres.dto'
-import { UpdateAiDto } from './dto/update-ai.dto'
 
 const SINGLETON_ID = 'singleton'
 const MIPRES_BASE_URL = 'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/api/GenerarToken'
@@ -48,18 +47,6 @@ export class CompanyService {
     return this.prisma.company.update({
       where: { id: SINGLETON_ID },
       data: { tokenCompany: dto.tokenCompany ?? null },
-    })
-  }
-
-  async updateAi(dto: UpdateAiDto) {
-    const company = await this.prisma.company.findUnique({ where: { id: SINGLETON_ID } })
-    if (!company) throw new NotFoundException('La empresa no ha sido configurada')
-    return this.prisma.company.update({
-      where: { id: SINGLETON_ID },
-      data: {
-        aiApiKey: dto.aiApiKey ?? null,
-        aiModel: dto.aiModel,
-      },
     })
   }
 

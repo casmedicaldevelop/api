@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import * as xlsx from 'xlsx';
 import { PrismaService } from '../../prisma/prisma.service';
+import { DriveService, type DriveItem, type FolderNode } from '../drive/drive.service';
 import { CreateServiceUserDto } from './dto/create-service-user.dto';
 import { UpdateServiceUserDto } from './dto/update-service-user.dto';
 import { ListServiceUsersDto } from './dto/list-service-users.dto';
@@ -84,7 +86,10 @@ function parseRow(row: RawRow, index: number): CreateServiceUserDto {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly drive: DriveService,
+  ) {}
 
   async findAll(dto: ListServiceUsersDto) {
     const page = dto.page ?? 1;
@@ -147,6 +152,8 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         id: dto.id,
+        documentType: dto.documentType ?? null,
+        gender: dto.gender ?? null,
         firstName: dto.firstName,
         secondName: dto.secondName,
         firstSurname: dto.firstSurname,
@@ -156,6 +163,7 @@ export class UsersService {
         birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
         birthDateApproximate: dto.birthDateApproximate ?? false,
         healthcareRegime: dto.healthcareRegime ?? null,
+        department: dto.department,
         city: dto.city,
         neighborhood: dto.neighborhood,
         address: dto.address,
@@ -169,6 +177,8 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: {
+        ...(dto.documentType !== undefined && { documentType: dto.documentType }),
+        ...(dto.gender !== undefined && { gender: dto.gender }),
         ...(dto.firstName !== undefined && { firstName: dto.firstName }),
         ...(dto.secondName !== undefined && { secondName: dto.secondName }),
         ...(dto.firstSurname !== undefined && { firstSurname: dto.firstSurname }),
@@ -178,6 +188,7 @@ export class UsersService {
         ...(dto.birthDate !== undefined && { birthDate: dto.birthDate ? new Date(dto.birthDate) : null }),
         ...(dto.birthDateApproximate !== undefined && { birthDateApproximate: dto.birthDateApproximate }),
         ...(dto.healthcareRegime !== undefined && { healthcareRegime: dto.healthcareRegime }),
+        ...(dto.department !== undefined && { department: dto.department }),
         ...(dto.city !== undefined && { city: dto.city }),
         ...(dto.neighborhood !== undefined && { neighborhood: dto.neighborhood }),
         ...(dto.address !== undefined && { address: dto.address }),
@@ -269,5 +280,104 @@ export class UsersService {
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, 'Usuarios');
     return xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  // ===== Gestor de archivos por usuario (directo contra Drive, sin tabla) =====
+
+  /** Verifica que el usuario exista y devuelve el id de la raíz USERS/{id}. */
+  private async filesRootId(userId: string): Promise<string> {
+    const row = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!row) throw new NotFoundException(`Usuario con cédula ${userId} no encontrado`);
+    return this.drive.ensureUserRoot(userId);
+  }
+
+  /** Verifica que el elemento pertenece al árbol del usuario; si no, 403. */
+  private async assertInTree(itemId: string, rootId: string): Promise<void> {
+    if (!(await this.drive.isWithinTree(itemId, rootId))) {
+      throw new ForbiddenException('El elemento no pertenece a este usuario.');
+    }
+  }
+
+  /** Enriquece las carpetas con conteo de elementos y tamaño (suma de archivos inmediatos). */
+  private async enrichFolders(items: DriveItem[]): Promise<DriveItem[]> {
+    return Promise.all(
+      items.map(async (it) => {
+        if (!it.isFolder) return it;
+        const children = await this.drive.listChildren(it.id);
+        const folderSizeBytes = children
+          .filter((c) => !c.isFolder)
+          .reduce((acc, c) => acc + (Number(c.size) || 0), 0);
+        return { ...it, childCount: children.length, folderSizeBytes };
+      }),
+    );
+  }
+
+  /** Contenido de la raíz USERS/{id} (la asegura si no existe). */
+  async filesRoot(userId: string) {
+    const rootId = await this.filesRootId(userId);
+    const [rawItems, path] = await Promise.all([
+      this.drive.listChildren(rootId),
+      this.drive.pathTo(rootId, rootId),
+    ]);
+    const items = await this.enrichFolders(rawItems);
+    return { rootId, folderId: rootId, path, items };
+  }
+
+  /** Barrido completo del árbol de carpetas del usuario (una sola vez, para el panel). */
+  async filesTree(userId: string): Promise<{ rootId: string; tree: FolderNode[] }> {
+    const rootId = await this.filesRootId(userId);
+    const tree = await this.drive.listFolderTree(rootId);
+    return { rootId, tree };
+  }
+
+  /** Contenido de una subcarpeta (validada dentro del árbol). */
+  async filesList(userId: string, folderId: string) {
+    const rootId = await this.filesRootId(userId);
+    await this.assertInTree(folderId, rootId);
+    const [rawItems, path] = await Promise.all([
+      this.drive.listChildren(folderId),
+      this.drive.pathTo(folderId, rootId),
+    ]);
+    const items = await this.enrichFolders(rawItems);
+    return { rootId, folderId, path, items };
+  }
+
+  /** Crea una subcarpeta en folderId. */
+  async filesCreateFolder(userId: string, folderId: string, name: string): Promise<DriveItem> {
+    const clean = (name ?? '').trim();
+    if (!clean) throw new BadRequestException('El nombre de la carpeta es obligatorio.');
+    const rootId = await this.filesRootId(userId);
+    await this.assertInTree(folderId, rootId);
+    return this.drive.createFolder(folderId, clean);
+  }
+
+  /** Sube un archivo a folderId. */
+  async filesUpload(
+    userId: string,
+    folderId: string,
+    file: { originalname: string; mimetype: string; buffer: Buffer } | undefined,
+  ): Promise<DriveItem> {
+    if (!file) throw new BadRequestException('No se recibió ningún archivo.');
+    const rootId = await this.filesRootId(userId);
+    await this.assertInTree(folderId, rootId);
+    return this.drive.uploadToFolder(folderId, file.buffer, file.originalname, file.mimetype);
+  }
+
+  /** Elimina un archivo o carpeta (no permite borrar la raíz del usuario). */
+  async filesDelete(userId: string, itemId: string): Promise<{ ok: true }> {
+    const rootId = await this.filesRootId(userId);
+    if (itemId === rootId) {
+      throw new BadRequestException('No se puede eliminar la carpeta raíz del usuario.');
+    }
+    await this.assertInTree(itemId, rootId);
+    await this.drive.deleteItem(itemId);
+    return { ok: true };
+  }
+
+  /** Stream de bytes para previsualizar/descargar. */
+  async filesContent(userId: string, itemId: string) {
+    const rootId = await this.filesRootId(userId);
+    await this.assertInTree(itemId, rootId);
+    return this.drive.getStream(itemId);
   }
 }

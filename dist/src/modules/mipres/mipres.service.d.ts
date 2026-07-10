@@ -1,14 +1,16 @@
 import { ConfigService } from '@nestjs/config';
 import { CompanyService } from '../company/company.service';
 import { UsersService } from '../users/users.service';
+import { FilingMipresService } from '../filing-mipres/filing-mipres.service';
 import type { WorkspaceResponse } from './types/workspace.response';
 export declare class MipresService {
     private readonly configService;
     private readonly companyService;
     private readonly usersService;
+    private readonly filingService;
     private readonly baseUrl;
     private readonly facBaseUrl;
-    constructor(configService: ConfigService, companyService: CompanyService, usersService: UsersService);
+    constructor(configService: ConfigService, companyService: CompanyService, usersService: UsersService, filingService: FilingMipresService);
     private enc;
     private getCreds;
     private fetchSispro;
@@ -26,7 +28,45 @@ export declare class MipresService {
         codSedeProv: string;
         codSerTecAEntregar: string;
         cantTotAEntregar: string;
-    }): Promise<unknown>;
+        doctorDocument: string;
+        userDocument: string;
+        prescriptionNumber: string;
+        medicationName: string;
+        inventoryCode?: string | null;
+        unitPrice: number;
+    }): Promise<{
+        sispro: unknown;
+        filing: {
+            scheduleId: string;
+            routingId: string | null;
+            deliveryId: string | null;
+            deliveryReportId: string | null;
+            billingId: string | null;
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            status: string;
+            filingCode: string | null;
+            userDocument: string;
+            prescriptionNumber: string;
+            substatus: string | null;
+            doctorDocument: string;
+            invoiceCode: string | null;
+            invoiceDate: Date | null;
+            technologyCode: string;
+            inventoryCode: string | null;
+            medicationName: string;
+            quantityToDeliver: number;
+            unitPrice: number;
+            totalPrice: number;
+            deliveryDate: Date | null;
+            maxDeliveryDate: Date;
+            cufe: string | null;
+            shelfCode: string | null;
+            quantityPending: number;
+            quantityDelivered: number;
+        };
+    }>;
     getSchedulesByPrescription(prescriptionNumber: string): Promise<unknown>;
     cancelSchedule(scheduleId: string): Promise<unknown>;
     getDeliveriesByPrescription(prescriptionNumber: string): Promise<unknown>;
@@ -45,6 +85,7 @@ export declare class MipresService {
     createDeliveryReport(body: {
         miPresEntregaId: string;
         valorEntregado: string;
+        deliveryId: string;
     }): Promise<unknown>;
     getDeliveryReportsByPrescription(prescriptionNumber: string): Promise<unknown>;
     cancelDeliveryReport(reportId: string): Promise<unknown>;
@@ -65,6 +106,7 @@ export declare class MipresService {
         ValorTotFacturado: string;
         CuotaModer: string;
         Copago: string;
+        deliveryReportId: string;
     }): Promise<unknown>;
     getFacturacionesByPrescription(prescriptionNumber: string): Promise<unknown>;
     cancelFacturacion(idFacturacion: string): Promise<unknown>;

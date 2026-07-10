@@ -9,29 +9,29 @@ export declare class ProvidersService {
     findAll(): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }[]>;
     findOne(id: number): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }>;
     update(id: number, dto: UpdateProviderDto): Promise<{
         id: number;
         name: string;
-        description: string | null;
-        updatedAt: Date;
-        tableKey: string;
-        address: string | null;
         phone: string | null;
+        updatedAt: Date;
+        description: string | null;
+        address: string | null;
+        tableKey: string;
     }>;
     findProducts(providerId: number, dto: ListProviderProductsDto): Promise<{
         data: {

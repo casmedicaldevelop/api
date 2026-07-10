@@ -13,6 +13,7 @@ exports.CreateDeliveryReportDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateDeliveryReportDto {
     miPresEntregaId;
+    deliveryId;
     valorEntregado;
 }
 exports.CreateDeliveryReportDto = CreateDeliveryReportDto;
@@ -21,6 +22,11 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateDeliveryReportDto.prototype, "miPresEntregaId", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateDeliveryReportDto.prototype, "deliveryId", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^\d+$/, { message: 'valorEntregado must contain digits only (no decimals, no separators)' }),

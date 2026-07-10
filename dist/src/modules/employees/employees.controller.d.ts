@@ -18,8 +18,8 @@ export declare class EmployeesController {
         temporaryPassword: string;
         id: string;
         name: string;
-        username: string;
         email: string;
+        username: string;
     }>;
     update(id: string, dto: UpdateStaffDto, req: {
         user: {

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MipresController = void 0;
 const common_1 = require("@nestjs/common");
 const mipres_service_1 = require("./mipres.service");
+const create_schedule_dto_1 = require("./dto/create-schedule.dto");
 const create_delivery_dto_1 = require("./dto/create-delivery.dto");
 const create_delivery_report_dto_1 = require("./dto/create-delivery-report.dto");
 const create_facturacion_dto_1 = require("./dto/create-facturacion.dto");
@@ -86,7 +87,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_schedule_dto_1.CreateScheduleDto]),
     __metadata("design:returntype", void 0)
 ], MipresController.prototype, "createSchedule", null);
 __decorate([

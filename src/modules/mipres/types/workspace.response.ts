@@ -1,7 +1,7 @@
 import type { User } from '@prisma/client'
 
 export type PatientResolution =
-  | { exists: true; user: User }
+  | { exists: true; isComplete: boolean; user: User }
   | {
       exists: false
       fromMipres: { tipoDoc: string; noDoc: string; address: string }

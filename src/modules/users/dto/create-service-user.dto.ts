@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { HealthcareRegime } from '@prisma/client';
+import { DocumentType, Gender, HealthcareRegime } from '@prisma/client';
 
 // All user-supplied strings are normalized to uppercase + trimmed.
 // Domain rule: every patient/user data point persists as uppercase.
@@ -24,6 +24,14 @@ export class CreateServiceUserDto {
   @Matches(/^\d+$/, { message: 'La cédula solo debe contener dígitos' })
   @MaxLength(20, { message: 'La cédula no puede superar 20 dígitos' })
   id: string;
+
+  @IsOptional()
+  @IsEnum(DocumentType, { message: 'Tipo de documento inválido' })
+  documentType?: DocumentType;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Género inválido' })
+  gender?: Gender;
 
   @Transform(toUpper)
   @IsString()
@@ -71,6 +79,12 @@ export class CreateServiceUserDto {
   @IsOptional()
   @IsEnum(HealthcareRegime, { message: 'Régimen de salud inválido' })
   healthcareRegime?: HealthcareRegime;
+
+  @Transform(toUpper)
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  department?: string;
 
   @Transform(toUpper)
   @IsOptional()

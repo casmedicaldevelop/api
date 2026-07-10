@@ -9,16 +9,16 @@ export declare class LocalStrategy extends LocalStrategy_base {
     validate(usernameOrEmail: string, password: string): Promise<{
         id: string;
         name: string;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
         phone: string | null;
-        password: string;
-        username: string;
         email: string;
         identificationNumber: string;
+        username: string;
+        password: string;
         role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
         mustChangePassword: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }
 export {};

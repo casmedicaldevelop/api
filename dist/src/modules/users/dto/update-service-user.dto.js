@@ -21,6 +21,8 @@ const toUpperOrNull = ({ value }) => {
     return trimmed === '' ? null : trimmed.toUpperCase();
 };
 class UpdateServiceUserDto {
+    documentType;
+    gender;
     firstName;
     secondName;
     firstSurname;
@@ -30,6 +32,7 @@ class UpdateServiceUserDto {
     birthDate;
     birthDateApproximate;
     healthcareRegime;
+    department;
     city;
     neighborhood;
     address;
@@ -37,6 +40,16 @@ class UpdateServiceUserDto {
     isActive;
 }
 exports.UpdateServiceUserDto = UpdateServiceUserDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.DocumentType, { message: 'Tipo de documento inválido' }),
+    __metadata("design:type", String)
+], UpdateServiceUserDto.prototype, "documentType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.Gender, { message: 'Género inválido' }),
+    __metadata("design:type", String)
+], UpdateServiceUserDto.prototype, "gender", void 0);
 __decorate([
     (0, class_transformer_1.Transform)(toUpper),
     (0, class_validator_1.IsOptional)(),
@@ -95,6 +108,13 @@ __decorate([
     (0, class_validator_1.IsEnum)(client_1.HealthcareRegime, { message: 'Régimen de salud inválido' }),
     __metadata("design:type", String)
 ], UpdateServiceUserDto.prototype, "healthcareRegime", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(toUpper),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
+    __metadata("design:type", String)
+], UpdateServiceUserDto.prototype, "department", void 0);
 __decorate([
     (0, class_transformer_1.Transform)(toUpper),
     (0, class_validator_1.IsOptional)(),

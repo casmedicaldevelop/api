@@ -28,6 +28,7 @@ class CreateFacturacionDto {
     ValorTotFacturado;
     CuotaModer;
     Copago;
+    deliveryReportId;
 }
 exports.CreateFacturacionDto = CreateFacturacionDto;
 __decorate([
@@ -108,4 +109,9 @@ __decorate([
     (0, class_validator_1.Matches)(/^\d+$/, { message: 'Copago must be digits only' }),
     __metadata("design:type", String)
 ], CreateFacturacionDto.prototype, "Copago", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateFacturacionDto.prototype, "deliveryReportId", void 0);
 //# sourceMappingURL=create-facturacion.dto.js.map

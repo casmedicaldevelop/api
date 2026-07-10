@@ -1,6 +1,7 @@
 import type { User } from '@prisma/client';
 export type PatientResolution = {
     exists: true;
+    isComplete: boolean;
     user: User;
 } | {
     exists: false;

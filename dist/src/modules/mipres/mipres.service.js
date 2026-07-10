@@ -14,8 +14,63 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const company_service_1 = require("../company/company.service");
 const users_service_1 = require("../users/users.service");
+const filing_mipres_service_1 = require("../filing-mipres/filing-mipres.service");
 const upstream_failure_exception_1 = require("../../common/filters/upstream-failure.exception");
 const SISPRO_TIMEOUT_MS = 15_000;
+function isFilled(value) {
+    if (value === null || value === undefined)
+        return false;
+    if (typeof value === 'string')
+        return value.trim() !== '';
+    return true;
+}
+function isUserComplete(user) {
+    return (isFilled(user.documentType) &&
+        isFilled(user.gender) &&
+        isFilled(user.firstName) &&
+        isFilled(user.secondName) &&
+        isFilled(user.firstSurname) &&
+        isFilled(user.secondSurname) &&
+        isFilled(user.phone) &&
+        isFilled(user.email) &&
+        isFilled(user.birthDate) &&
+        isFilled(user.healthcareRegime) &&
+        isFilled(user.city) &&
+        isFilled(user.neighborhood) &&
+        isFilled(user.address));
+}
+function extractIdProgramacion(response) {
+    const item = Array.isArray(response) ? response[0] : response;
+    if (!item || typeof item !== 'object')
+        return null;
+    const raw = item.IdProgramacion;
+    const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw;
+    return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null;
+}
+function extractIdEntrega(response) {
+    const item = Array.isArray(response) ? response[0] : response;
+    if (!item || typeof item !== 'object')
+        return null;
+    const raw = item.IdEntrega;
+    const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw;
+    return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null;
+}
+function extractIdReporteEntrega(response) {
+    const item = Array.isArray(response) ? response[0] : response;
+    if (!item || typeof item !== 'object')
+        return null;
+    const raw = item.IdReporteEntrega;
+    const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw;
+    return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null;
+}
+function extractIdFacturacion(response) {
+    const item = Array.isArray(response) ? response[0] : response;
+    if (!item || typeof item !== 'object')
+        return null;
+    const raw = item.IdFacturacion;
+    const id = typeof raw === 'string' ? Number.parseInt(raw, 10) : raw;
+    return typeof id === 'number' && Number.isFinite(id) && id > 0 ? id : null;
+}
 function isNetworkError(err) {
     if (!err || typeof err !== 'object')
         return false;
@@ -38,12 +93,14 @@ let MipresService = class MipresService {
     configService;
     companyService;
     usersService;
+    filingService;
     baseUrl;
     facBaseUrl;
-    constructor(configService, companyService, usersService) {
+    constructor(configService, companyService, usersService, filingService) {
         this.configService = configService;
         this.companyService = companyService;
         this.usersService = usersService;
+        this.filingService = filingService;
         this.baseUrl = this.configService.get('MIPRES_API_URL', 'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS');
         this.facBaseUrl = this.configService.get('MIPRES_FAC_API_URL', 'https://wsmipres.sispro.gov.co/WSFACMIPRESNOPBS');
     }
@@ -128,10 +185,11 @@ let MipresService = class MipresService {
         const address = String(first.DirPaciente ?? '').trim();
         const user = noDoc ? await this.usersService.findOneOrNull(noDoc) : null;
         if (user) {
+            const isComplete = isUserComplete(user);
             return {
                 prescriptionNumber,
                 routings,
-                patient: { exists: true, user },
+                patient: { exists: true, isComplete, user },
             };
         }
         return {
@@ -142,7 +200,7 @@ let MipresService = class MipresService {
     }
     async createSchedule(body) {
         const { nit, tokenAuth } = await this.getCreds();
-        return this.put(`/api/Programacion/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
+        const sispro = await this.put(`/api/Programacion/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
             ID: Number(body.miPresDireccionId),
             FecMaxEnt: body.fecMaxEnt,
             TipoIDSedeProv: body.tipoIdSedeProv,
@@ -151,6 +209,25 @@ let MipresService = class MipresService {
             CodSerTecAEntregar: body.codSerTecAEntregar,
             CantTotAEntregar: body.cantTotAEntregar,
         });
+        const idProgramacion = extractIdProgramacion(sispro);
+        if (idProgramacion === null) {
+            throw new common_1.BadRequestException('SISPRO no devolvió un IdProgramacion válido; el radicado no se registró');
+        }
+        const quantityToDeliver = Number.parseInt(body.cantTotAEntregar, 10);
+        const filing = await this.filingService.createFromBinding({
+            doctorDocument: body.doctorDocument,
+            userDocument: body.userDocument,
+            prescriptionNumber: body.prescriptionNumber,
+            scheduleId: BigInt(idProgramacion),
+            routingId: BigInt(body.miPresDireccionId),
+            technologyCode: body.codSerTecAEntregar,
+            inventoryCode: body.inventoryCode ?? null,
+            medicationName: body.medicationName,
+            quantityToDeliver,
+            unitPrice: body.unitPrice,
+            maxDeliveryDate: new Date(body.fecMaxEnt),
+        });
+        return { sispro, filing };
     }
     async getSchedulesByPrescription(prescriptionNumber) {
         const { nit, tokenAuth } = await this.getCreds();
@@ -158,7 +235,9 @@ let MipresService = class MipresService {
     }
     async cancelSchedule(scheduleId) {
         const { nit, tokenAuth } = await this.getCreds();
-        return this.put(`/api/AnularProgramacion/${this.enc(nit)}/${this.enc(tokenAuth)}/${this.enc(scheduleId)}`);
+        const result = await this.put(`/api/AnularProgramacion/${this.enc(nit)}/${this.enc(tokenAuth)}/${this.enc(scheduleId)}`);
+        await this.filingService.deleteBySchedule(BigInt(scheduleId));
+        return result;
     }
     async getDeliveriesByPrescription(prescriptionNumber) {
         const { nit, tokenAuth } = await this.getCreds();
@@ -170,7 +249,7 @@ let MipresService = class MipresService {
     }
     async createDelivery(body) {
         const { nit, tokenAuth } = await this.getCreds();
-        return this.put(`/api/Entrega/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
+        const sispro = await this.put(`/api/Entrega/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
             ID: Number(body.miPresDireccionId),
             CodSerTecEntregado: body.codSerTecEntregado,
             CantTotEntregada: body.cantTotEntregada,
@@ -181,15 +260,25 @@ let MipresService = class MipresService {
             TipoIDRecibe: body.tipoIdRecibe,
             NoIDRecibe: body.noIdRecibe,
         });
+        const idEntrega = extractIdEntrega(sispro);
+        if (idEntrega !== null) {
+            await this.filingService.setDeliveryByRouting(BigInt(body.miPresDireccionId), BigInt(idEntrega), new Date(body.fecEntrega));
+        }
+        return sispro;
     }
     async createDeliveryReport(body) {
         const { nit, tokenAuth } = await this.getCreds();
-        return this.put(`/api/ReporteEntrega/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
+        const sispro = await this.put(`/api/ReporteEntrega/${this.enc(nit)}/${this.enc(tokenAuth)}`, {
             ID: Number(body.miPresEntregaId),
             EstadoEntrega: 1,
             CausaNoEntrega: 0,
             ValorEntregado: body.valorEntregado,
         });
+        const idReporte = extractIdReporteEntrega(sispro);
+        if (idReporte !== null) {
+            await this.filingService.setDeliveryReportByDelivery(BigInt(body.deliveryId), BigInt(idReporte));
+        }
+        return sispro;
     }
     async getDeliveryReportsByPrescription(prescriptionNumber) {
         const { nit, tokenAuth } = await this.getCreds();
@@ -200,8 +289,14 @@ let MipresService = class MipresService {
         return this.put(`/api/AnularReporteEntrega/${this.enc(nit)}/${this.enc(tokenAuth)}/${this.enc(reportId)}`);
     }
     async createFacturacion(body) {
+        const { deliveryReportId, ...sisproBody } = body;
         const { nit, tokenAuth } = await this.getCreds();
-        return this.putFac(`/api/Facturacion/${this.enc(nit)}/${this.enc(tokenAuth)}`, body);
+        const sispro = await this.putFac(`/api/Facturacion/${this.enc(nit)}/${this.enc(tokenAuth)}`, sisproBody);
+        const idFactura = extractIdFacturacion(sispro);
+        if (idFactura !== null) {
+            await this.filingService.setBillingByDeliveryReport(BigInt(deliveryReportId), BigInt(idFactura), sisproBody.NoFactura);
+        }
+        return sispro;
     }
     async getFacturacionesByPrescription(prescriptionNumber) {
         const { nit, tokenAuth } = await this.getCreds();
@@ -217,6 +312,7 @@ exports.MipresService = MipresService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService,
         company_service_1.CompanyService,
-        users_service_1.UsersService])
+        users_service_1.UsersService,
+        filing_mipres_service_1.FilingMipresService])
 ], MipresService);
 //# sourceMappingURL=mipres.service.js.map

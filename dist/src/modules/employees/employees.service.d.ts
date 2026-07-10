@@ -18,8 +18,8 @@ export declare class EmployeesService {
         temporaryPassword: string;
         id: string;
         name: string;
-        username: string;
         email: string;
+        username: string;
     }>;
     update(id: string, dto: UpdateStaffDto, currentUserId: string): Promise<any>;
     assignModules(id: string, dto: AssignStaffModulesDto): Promise<{
